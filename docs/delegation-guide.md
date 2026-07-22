@@ -5,6 +5,22 @@ optionally, to a reasoning-capable delegate such as the codex plugin's
 `codex-rescue` — so the main Claude thread stays focused on the work only it
 can do.
 
+## Which setup do you have?
+
+This guide describes the full 3-lane setup: Claude Code orchestrates, a
+reasoning-capable delegate (Codex, or any other CLI-drivable agent that can
+reason about a codebase) takes reasoning-heavy work, and Copilot CLI (this
+plugin) takes mechanical work. You don't need Codex specifically — the
+"reasoning delegate" lane is whatever second agent you have wired in.
+
+**No second delegate at all?** Only the Copilot lane exists. Mechanical work
+still delegates out; everything this guide calls "reasoning delegate" work
+(build-fixing, multi-file refactors, logic-bearing code) stays inline with
+Claude instead of failing over to another lane. Use the no-reasoning-delegate
+variant in [docs/claude-md-snippet.md](claude-md-snippet.md) and skip the
+"other lane" steps in the sections below — a quota-exhausted Copilot just
+means "stop delegating, do it inline," since there's nothing to fail over to.
+
 ## The core split
 
 | Lane | Owns | Examples |
