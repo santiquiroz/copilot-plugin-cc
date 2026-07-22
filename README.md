@@ -86,6 +86,56 @@ tool outside git/write and the user confirmed it.
 | `/copilot:setup` | Verify CLI install, version floor, auth, and model pinning options |
 | `docs/delegation-guide.md` | Full multi-agent orchestration guide |
 | `docs/claude-md-snippet.md` | Ready-to-paste CLAUDE.md block |
+| `.codex-plugin/plugin.json` | Codex CLI plugin manifest (experimental native install) |
+| `skills/copilot-rescue/SKILL.md` | Codex skill — same forwarder logic, Codex runs the shell call itself (no subagent layer) |
+| `docs/agents-md-snippet.md` | Ready-to-paste `AGENTS.md` block for Codex users |
+
+## Codex CLI
+
+The same idea, for [Codex CLI](https://developers.openai.com/codex/): delegate
+mechanical work to GitHub Copilot CLI, so Codex's reasoning stays on the work
+only it can do. Ships as a Codex **skill** (`skills/copilot-rescue/SKILL.md`)
+instead of a subagent — Codex runs the forwarded `copilot -p ...` command
+itself, since Codex has no separate subagent/Task layer.
+
+### Requirements
+
+- Codex CLI
+- A GitHub Copilot subscription
+- GitHub Copilot CLI ≥ **1.0.67** (`npm install -g @github/copilot`)
+
+### Install
+
+**Manual (confirmed working):**
+
+```bash
+mkdir -p ~/.agents/skills
+cp -r skills/copilot-rescue ~/.agents/skills/copilot-rescue
+```
+
+Or repo-scoped only: copy into `<your-repo>/.agents/skills/copilot-rescue/` instead.
+
+**Native plugin marketplace (experimental — Codex's plugin system is new; please
+open an issue if the paths below don't match your Codex CLI version):**
+
+```
+codex plugin marketplace add santiquiroz/copilot-plugin-cc
+```
+
+Then open the plugin browser (`/plugins` inside Codex) and install `copilot`.
+
+### Usage
+
+Codex matches skills implicitly by their `description`, or you can invoke
+explicitly. Ask for a mechanical task and Codex should pick `copilot-rescue`
+on its own; to wire proactive delegation into your own instructions, paste the
+block from [docs/agents-md-snippet.md](docs/agents-md-snippet.md) into your
+`AGENTS.md`.
+
+### Safety model
+
+Same as the Claude Code side — see [Safety model](#safety-model) above. The
+skill runs Copilot CLI with the identical scoped allow/deny flag set.
 
 ## License
 

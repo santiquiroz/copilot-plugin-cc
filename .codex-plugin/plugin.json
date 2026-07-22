@@ -1,0 +1,11 @@
+{
+  "name": "copilot",
+  "version": "0.1.0",
+  "description": "Delegate mechanical coding tasks from Codex CLI to GitHub Copilot CLI in non-interactive autonomous mode.",
+  "author": {
+    "name": "Santiago Quiroz Upegui"
+  },
+  "repository": "https://github.com/santiquiroz/copilot-plugin-cc",
+  "license": "MIT",
+  "skills": "./skills/"
+}

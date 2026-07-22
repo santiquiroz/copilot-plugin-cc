@@ -86,6 +86,57 @@ herramienta fuera de git/write y el usuario lo confirmó.
 | `/copilot:setup` | Verifica la instalación de CLI, versión mínima, autenticación y opciones de fijación de modelo |
 | `docs/delegation-guide.md` | Guía completa de orquestación multi-agente |
 | `docs/claude-md-snippet.md` | Bloque listo para copiar en CLAUDE.md |
+| `.codex-plugin/plugin.json` | Manifiesto de plugin para Codex CLI (instalación nativa experimental) |
+| `skills/copilot-rescue/SKILL.md` | Skill para Codex — misma lógica de reenvío, Codex ejecuta la llamada de shell directamente (sin capa de subagente) |
+| `docs/agents-md-snippet.md` | Bloque listo para copiar en `AGENTS.md` para usuarios de Codex |
+
+## Codex CLI
+
+La misma idea, para [Codex CLI](https://developers.openai.com/codex/): delegar
+trabajo mecánico a GitHub Copilot CLI, para que el razonamiento de Codex se
+dedique solo al trabajo que únicamente él puede hacer. Se distribuye como una
+**skill** de Codex (`skills/copilot-rescue/SKILL.md`) en vez de un subagente —
+Codex ejecuta el comando `copilot -p ...` reenviado él mismo, ya que Codex no
+tiene una capa separada de subagente/Task.
+
+### Requisitos
+
+- Codex CLI
+- Una suscripción a GitHub Copilot
+- GitHub Copilot CLI ≥ **1.0.67** (`npm install -g @github/copilot`)
+
+### Instalación
+
+**Manual (funcionamiento confirmado):**
+
+```bash
+mkdir -p ~/.agents/skills
+cp -r skills/copilot-rescue ~/.agents/skills/copilot-rescue
+```
+
+O solo a nivel de repo: copia en `<tu-repo>/.agents/skills/copilot-rescue/` en su lugar.
+
+**Marketplace de plugins nativo (experimental — el sistema de plugins de Codex
+es nuevo; abre un issue si las rutas no coinciden con tu versión de Codex CLI):**
+
+```
+codex plugin marketplace add santiquiroz/copilot-plugin-cc
+```
+
+Luego abre el navegador de plugins (`/plugins` dentro de Codex) e instala `copilot`.
+
+### Uso
+
+Codex empareja skills de forma implícita por su `description`, o puedes invocarla
+explícitamente. Pide una tarea mecánica y Codex debería elegir `copilot-rescue`
+por su cuenta; para integrar delegación proactiva en tus propias instrucciones,
+copia el bloque de [docs/agents-md-snippet.md](docs/agents-md-snippet.md) en tu
+`AGENTS.md`.
+
+### Modelo de seguridad
+
+Igual que en el lado de Claude Code — ver [Modelo de seguridad](#modelo-de-seguridad)
+arriba. La skill ejecuta Copilot CLI con el mismo conjunto acotado de flags allow/deny.
 
 ## Licencia
 
