@@ -19,7 +19,7 @@ Inspirado en la estructura de [openai/codex-plugin-cc](https://github.com/openai
 
 - Claude Code
 - Una suscripción a GitHub Copilot
-- GitHub Copilot CLI ≥ **1.0.67** (`npm install -g @github/copilot`)
+- GitHub Copilot CLI ≥ **1.0.83** recomendado (`npm install -g @github/copilot`); 1.0.67 sigue siendo el mínimo para `--model`
 
 ## Instalación
 
@@ -44,6 +44,7 @@ Delegación explícita:
 /copilot:rescue remove all unused imports under src/ and fix the import order
 /copilot:rescue --background generate boilerplate test specs for src/services/user-mapper.ts
 /copilot:rescue --model claude-sonnet-5 rename WidgetFactory to WidgetBuilder across the repo
+/copilot:rescue --credits 20 --effort low generate boilerplate test specs for src/services/user-mapper.ts
 ```
 
 Delegación proactiva: el agente `copilot-rescue` se describe a sí mismo para que Claude
@@ -61,14 +62,20 @@ Cada tarea reenviada ejecuta Copilot CLI con un conjunto de flags acotado:
 
 ```
 copilot -p "<task>" -s \
+  --no-ask-user --max-ai-credits 10 \
   --allow-tool='shell(git:*)' --allow-tool=write \
-  --deny-tool='shell(rm)' --deny-tool='shell(git push)' --deny-tool='shell(git reset)'
+  --deny-tool='shell(rm)' --deny-tool='shell(git push)' \
+  --deny-tool='shell(git reset)' --deny-tool='shell(git clean)' \
+  --deny-tool='shell(git checkout)'
 ```
 
-Las reglas de negación prevalecen sobre las reglas de permitir — incluso bajo `--allow-all` — así que una
-tarea mecánica puede escribir archivos y usar git local, pero nunca puede eliminar archivos, hacer push o
-restablecer estado compartido. `--allow-all` solo se usa cuando una tarea genuinamente necesita una
-herramienta fuera de git/write y el usuario lo confirmó.
+El límite predeterminado es de 10 créditos de IA y `--no-ask-user` evita que el
+agente se detenga esperando a una persona. Las reglas de negación prevalecen —
+incluso bajo `--allow-all` — así que una tarea mecánica puede escribir archivos y
+usar git local, pero nunca eliminar archivos, hacer push, resetear, limpiar ni
+hacer checkout. `--credits <N>` cambia el límite. Una tarea que pida
+explícitamente npm, dotnet, python u otra herramienta puede añadir su
+`--allow-tool='shell(<herramienta>:*)'`; nunca uses `--allow-all`.
 
 ## Problemas conocidos del CLI que este plugin mitiga
 
@@ -76,13 +83,14 @@ herramienta fuera de git/write y el usuario lo confirmó.
 |---|---|
 | Bucle infinito de autopiloto en tareas bloqueadas externamente ([copilot-cli#2969](https://github.com/github/copilot-cli/issues/2969)) | Se evita `--autopilot` para tareas acotadas; cuando se usa, `--max-autopilot-continues <N>` siempre se fija explícitamente |
 | Reanudar después de un límite de velocidad puede colgar | En salida "rate limit" + ~10s de silencio: termina el proceso e informa, nunca esperes; relanza fresco sin `--continue` |
+| Un CLI anterior a 1.0.83 rechaza los flags de seguridad/crédito | Reintenta una vez sin `--no-ask-user` y `--max-ai-credits`, y luego actualiza Copilot CLI |
 
 ## Qué hay en el plugin
 
 | Componente | Propósito |
 |---|---|
 | `agents/copilot-rescue.md` | Agente forwarder delgado — una llamada `copilot -p`, salida devuelta textualmente |
-| `/copilot:rescue` | Delega una tarea explícitamente (`--background`, `--wait`, `--model <name>`) |
+| `/copilot:rescue` | Delega una tarea explícitamente (`--background`, `--wait`, `--model <name>`, `--credits <N>`, `--effort <level>`) |
 | `/copilot:setup` | Verifica la instalación de CLI, versión mínima, autenticación y opciones de fijación de modelo |
 | `docs/delegation-guide.md` | Guía completa de orquestación multi-agente |
 | `docs/claude-md-snippet.md` | Bloque listo para copiar en CLAUDE.md |
@@ -103,7 +111,7 @@ tiene una capa separada de subagente/Task.
 
 - Codex CLI
 - Una suscripción a GitHub Copilot
-- GitHub Copilot CLI ≥ **1.0.67** (`npm install -g @github/copilot`)
+- GitHub Copilot CLI ≥ **1.0.83** recomendado (`npm install -g @github/copilot`); 1.0.67 sigue siendo el mínimo para `--model`
 
 ### Instalación
 

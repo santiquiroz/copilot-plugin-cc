@@ -1,6 +1,6 @@
 ---
 description: Delegate a mechanical, zero-domain-context task to the Copilot rescue subagent
-argument-hint: "[--background|--wait] [--model <name>] [the mechanical task Copilot should perform]"
+argument-hint: "[--background|--wait] [--model <name>] [--credits <N>] [--effort <level>] [the mechanical task Copilot should perform]"
 allowed-tools: AskUserQuestion, Agent
 ---
 
@@ -18,6 +18,8 @@ Execution mode:
 - If neither flag is present, default to foreground.
 - `--background` and `--wait` are execution flags for Claude Code. Do not forward them in the prompt, and do not treat them as part of the natural-language task text.
 - `--model <name>` is a runtime-selection flag. Preserve it in the forwarded prompt (the subagent maps it to copilot's `--model` flag), but do not treat it as part of the natural-language task text.
+- `--credits <N>` is a runtime-selection flag. It overrides the default 10-credit cap and is forwarded as `--max-ai-credits <N>`.
+- `--effort <level>` is a runtime-selection flag forwarded as `--effort <level>`. Tasks explicitly marked mechanical use `--effort low` when no effort level is supplied.
 
 Operating rules:
 

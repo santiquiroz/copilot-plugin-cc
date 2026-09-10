@@ -9,21 +9,28 @@ Forward the requested task to GitHub Copilot CLI with one shell command. Do not 
 
 ```
 copilot -p "<task>" -s \
+  --no-ask-user --max-ai-credits 10 \
   --allow-tool='shell(git:*)' --allow-tool=write \
-  --deny-tool='shell(rm)' --deny-tool='shell(git push)' --deny-tool='shell(git reset)'
+  --deny-tool='shell(rm)' --deny-tool='shell(git push)' \
+  --deny-tool='shell(git reset)' --deny-tool='shell(git clean)' \
+  --deny-tool='shell(git checkout)'
 ```
 
-Deny rules win over allow rules, even under `--allow-all` — this keeps the run non-interactive-capable while blocking destructive/shared-state commands a mechanical task never needs.
+Deny rules win over allow rules, even under `--allow-all` — this keeps the run non-interactive-capable while blocking destructive/shared-state commands a mechanical task never needs. The default credit cap is 10; `--credits <N>` overrides it, and caller-supplied `--effort <level>` is forwarded. Add `--effort low` when the caller marks the task mechanical.
 
 ## Rules
 
 - Preserve the user's task text verbatim in `-p`. Do not add commentary or hedging.
 - `-s` / `--silent` strips usage-stats noise so returned stdout is clean.
 - Add `--model <name>` only if the user named a model; otherwise omit (Auto-selection carries a billing discount on routine work).
+- Add `--max-ai-credits <N>` for caller-supplied `--credits <N>`, or use the default of 10.
+- Add `--effort <level>` when supplied; use `--effort low` when the caller marks the task mechanical.
 - Add `--add-dir <path>` if the task is scoped outside the current working directory; add `-C <dir>` only if it explicitly targets a different working directory.
 - Run the command synchronously — wait for it to finish, don't background it.
 - If the user says "continue"/"keep going"/"resume" prior Copilot work here, add `--continue` instead of starting fresh.
 - Do not inspect the repo, grep, or do follow-up work beyond the one forwarded command — Copilot does the task, you relay its output.
+- If Copilot rejects `--no-ask-user` or `--max-ai-credits` as unknown, rerun once without both flags and tell the caller to update the CLI.
+- A task that explicitly needs a tool outside git/write (such as npm, dotnet, or python) may add the corresponding `--allow-tool='shell(<tool>:*)'`; never use `--allow-all`.
 - Only use `--autopilot` for genuinely open-ended multi-step tasks, and always pin `--max-autopilot-continues <N>` (e.g. 8) when you do — Copilot CLI has a known infinite-loop bug on externally-blocked tasks under autopilot (github/copilot-cli#2969).
 
 ## Known issues to work around
@@ -33,7 +40,7 @@ Deny rules win over allow rules, even under `--allow-all` — this keeps the run
 
 ## Quota / failure handling
 
-If the command fails (non-zero exit, auth error, or a rate-limit message), report the error text verbatim instead of retrying silently — the caller decides whether to fall back to another approach or take the task over directly. To probe auth/health first: `copilot --version`, then `copilot -p "Reply with exactly one word: ready" -s --deny-tool=shell --deny-tool=write`.
+If the command fails (non-zero exit, auth error, or a rate-limit message), report the error text verbatim instead of retrying silently — the caller decides whether to fall back to another approach or take the task over directly. To probe auth/health first: `copilot --version`, then `copilot -p "Reply with exactly one word: ready" -s --no-ask-user --deny-tool=shell --deny-tool=write`.
 
 ## Output
 

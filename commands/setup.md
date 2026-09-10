@@ -20,13 +20,14 @@ copilot --version
 Step 2 — Version gate
 
 - If the reported version is lower than 1.0.67: warn that multi-model selection (`--model`) is unsupported on this version and recommend `npm update -g @github/copilot`. Continue with the remaining checks.
+- If the reported version is lower than 1.0.83: warn that `--no-ask-user` and `--max-ai-credits` are unavailable and the forwarder will omit them. Continue with the remaining checks.
 
 Step 3 — Authentication probe
 
 Run:
 
 ```bash
-copilot -p "Reply with exactly one word: ready" -s --deny-tool=shell --deny-tool=write
+copilot -p "Reply with exactly one word: ready" -s --no-ask-user --deny-tool=shell --deny-tool=write
 ```
 
 - Output contains `ready` → authenticated and working.
@@ -35,4 +36,4 @@ copilot -p "Reply with exactly one word: ready" -s --deny-tool=shell --deny-tool
 
 Step 4 — Consolidated report
 
-Summarize in one short block: install state, version (and whether it meets the 1.0.67 floor), auth state, and model options — pin with `--model <name>` or the `COPILOT_MODEL` environment variable for deterministic behavior; omit (or use `--model auto`) to allow Auto-selection, which carries a billing discount on routine mechanical work.
+Summarize in one short block: install state, version (and whether it meets the 1.0.67 model floor and 1.0.83 safety/credit gate), auth state, and model options — pin with `--model <name>` or the `COPILOT_MODEL` environment variable for deterministic behavior; omit (or use `--model auto`) to allow Auto-selection, which carries a billing discount on routine mechanical work.

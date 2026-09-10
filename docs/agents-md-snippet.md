@@ -25,4 +25,4 @@ resume with `--continue` on a rate-limited run — start fresh or fall back to
 doing the task directly.
 ```
 
-Requires GitHub Copilot CLI ≥ 1.0.67 installed and authenticated (`copilot --version`, then `copilot -p "..." -s`). See the main [README](../README.md) for install steps.
+Requires GitHub Copilot CLI ≥ 1.0.83 recommended (1.0.67 remains the `--model` floor) and authenticated (`copilot --version`, then `copilot -p "..." -s --no-ask-user`). See the main [README](../README.md) for install steps.

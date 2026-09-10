@@ -64,14 +64,18 @@ The `copilot-rescue` agent always runs Copilot CLI with a scoped flag set:
 
 ```
 copilot -p "<task>" -s \
+  --no-ask-user --max-ai-credits 10 \
   --allow-tool='shell(git:*)' --allow-tool=write \
-  --deny-tool='shell(rm)' --deny-tool='shell(git push)' --deny-tool='shell(git reset)'
+  --deny-tool='shell(rm)' --deny-tool='shell(git push)' \
+  --deny-tool='shell(git reset)' --deny-tool='shell(git clean)' \
+  --deny-tool='shell(git checkout)'
 ```
 
-- Deny rules always win over allow rules — even under `--allow-all`. The
-  denies block destructive and shared-state commands a mechanical task never
-  needs (`rm`, `git push`, `git reset`) while keeping the run fully
-  non-interactive.
+- `--no-ask-user` prevents stalls and `--max-ai-credits 10` caps default spend
+  (`--credits <N>` overrides it). Deny rules always win over allow rules — even
+  under `--allow-all`. The denies block destructive and shared-state commands a
+  mechanical task never needs (`rm`, `git push`, `git reset`, `git clean`,
+  `git checkout`) while keeping the run fully non-interactive.
 - `--autopilot` is avoided for bounded tasks. When a task is genuinely
   open-ended, `--max-autopilot-continues <N>` is always pinned explicitly:
   Copilot CLI has a known infinite-loop bug on externally-blocked tasks

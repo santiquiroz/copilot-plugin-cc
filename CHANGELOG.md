@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0 — 2026-09-10
+
+- Align Copilot forwarding with CLI 1.0.83: disable interactive questions,
+  cap default spend at 10 AI credits, support caller-selected effort, and
+  deny `rm`, `git push`, `git reset`, `git clean`, and `git checkout`.
+- Add `--credits <N>` and `--effort <level>` runtime flags, an older-CLI
+  compatibility retry, and explicit opt-in tool allowances.
+
 ## 0.2.0 — 2026-07-22
 
 - Add Codex CLI compatibility: `copilot-rescue` ships as a Codex skill

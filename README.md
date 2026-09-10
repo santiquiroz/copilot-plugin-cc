@@ -19,7 +19,7 @@ Inspired by the structure of [openai/codex-plugin-cc](https://github.com/openai/
 
 - Claude Code
 - A GitHub Copilot subscription
-- GitHub Copilot CLI ≥ **1.0.67** (`npm install -g @github/copilot`)
+- GitHub Copilot CLI ≥ **1.0.83** recommended (`npm install -g @github/copilot`); 1.0.67 remains the minimum for `--model`
 
 ## Install
 
@@ -44,6 +44,7 @@ Explicit delegation:
 /copilot:rescue remove all unused imports under src/ and fix the import order
 /copilot:rescue --background generate boilerplate test specs for src/services/user-mapper.ts
 /copilot:rescue --model claude-sonnet-5 rename WidgetFactory to WidgetBuilder across the repo
+/copilot:rescue --credits 20 --effort low generate boilerplate test specs for src/services/user-mapper.ts
 ```
 
 Proactive delegation: the `copilot-rescue` agent describes itself so Claude
@@ -61,14 +62,20 @@ Every forwarded task runs Copilot CLI with a scoped flag set:
 
 ```
 copilot -p "<task>" -s \
+  --no-ask-user --max-ai-credits 10 \
   --allow-tool='shell(git:*)' --allow-tool=write \
-  --deny-tool='shell(rm)' --deny-tool='shell(git push)' --deny-tool='shell(git reset)'
+  --deny-tool='shell(rm)' --deny-tool='shell(git push)' \
+  --deny-tool='shell(git reset)' --deny-tool='shell(git clean)' \
+  --deny-tool='shell(git checkout)'
 ```
 
-Deny rules win over allow rules — even under `--allow-all` — so a mechanical
-task can write files and use local git, but can never delete files, push, or
-reset shared state. `--allow-all` is only used when a task genuinely needs a
-tool outside git/write and the user confirmed it.
+The default cap is 10 AI credits, `--no-ask-user` prevents the agent from
+stalling for human input, and deny rules win over allow rules — even under
+`--allow-all` — so a mechanical task can write files and use local git, but can
+never delete files, push, reset, clean, or checkout shared state. `--credits <N>`
+overrides the cap. A task that explicitly needs npm, dotnet, python, or another
+tool may add its specific `--allow-tool='shell(<tool>:*)'`; never use
+`--allow-all`.
 
 ## Known upstream issues this plugin works around
 
@@ -76,13 +83,14 @@ tool outside git/write and the user confirmed it.
 |---|---|
 | Autopilot infinite loop on externally-blocked tasks ([copilot-cli#2969](https://github.com/github/copilot-cli/issues/2969)) | `--autopilot` avoided for bounded tasks; when used, `--max-autopilot-continues <N>` is always pinned explicitly |
 | Resume after a rate-limit hit can hang | On "rate limit" output + ~10s silence: kill the process and report, never wait; relaunch fresh without `--continue` |
+| CLI older than 1.0.83 rejects safety/credit flags | Retry once without `--no-ask-user` and `--max-ai-credits`, then update Copilot CLI |
 
 ## What's in the plugin
 
 | Piece | Purpose |
 |---|---|
 | `agents/copilot-rescue.md` | Thin forwarder subagent — one `copilot -p` call, output returned verbatim |
-| `/copilot:rescue` | Delegate a task explicitly (`--background`, `--wait`, `--model <name>`) |
+| `/copilot:rescue` | Delegate a task explicitly (`--background`, `--wait`, `--model <name>`, `--credits <N>`, `--effort <level>`) |
 | `/copilot:setup` | Verify CLI install, version floor, auth, and model pinning options |
 | `docs/delegation-guide.md` | Full multi-agent orchestration guide |
 | `docs/claude-md-snippet.md` | Ready-to-paste CLAUDE.md block |
@@ -102,7 +110,7 @@ itself, since Codex has no separate subagent/Task layer.
 
 - Codex CLI
 - A GitHub Copilot subscription
-- GitHub Copilot CLI ≥ **1.0.67** (`npm install -g @github/copilot`)
+- GitHub Copilot CLI ≥ **1.0.83** recommended (`npm install -g @github/copilot`); 1.0.67 remains the minimum for `--model`
 
 ### Install
 
