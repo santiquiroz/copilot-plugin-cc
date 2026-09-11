@@ -38,6 +38,14 @@ Rules:
 - Launch delegations in the background and keep working — never idle waiting.
 - WIP cap: 3–5 concurrent delegations. Kill-switch: 3 failed iterations on
   the same task → stop retrying, bring it inline.
+- Build/test/lint inside a delegated task: only git runs by default in
+  Copilot's `-p` mode. Put `--allow-shell <tool>` in the prompt (e.g.
+  `--allow-shell dotnet`), or name the exact command when its tool is a build
+  toolchain ("run `dotnet test`"; `node`, `python` and `npx` always need
+  `--allow-shell`),
+  and review `git status` / `git log` / `git reflog` after every run — even
+  the default git allowance can run code via aliases or hooks, and any extra
+  shell allowance is full code execution.
 - Quota fallback: a 429/rate-limit error carrying a retry-after hint is a
   soft cap — wait that long and retry the SAME delegate once. A 5xx/overload
   error with no retry hint → fail over immediately (Copilot quota out → try
@@ -88,6 +96,14 @@ Rules:
 - WIP cap: 3–5 concurrent delegations. Kill-switch: 3 failed iterations on
   the same task → stop retrying, bring it inline (there's no other lane to
   hand it to instead).
+- Build/test/lint inside a delegated task: only git runs by default in
+  Copilot's `-p` mode. Put `--allow-shell <tool>` in the prompt (e.g.
+  `--allow-shell dotnet`), or name the exact command when its tool is a build
+  toolchain ("run `dotnet test`"; `node`, `python` and `npx` always need
+  `--allow-shell`),
+  and review `git status` / `git log` / `git reflog` after every run — even
+  the default git allowance can run code via aliases or hooks, and any extra
+  shell allowance is full code execution.
 - Quota fallback: Copilot hits quota (429/5xx/"rate limit") → nothing to
   fail over to. Stop auto-delegating for the rest of the session, do the
   task inline, and say so once.

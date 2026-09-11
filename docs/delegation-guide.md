@@ -63,19 +63,57 @@ Claude: continues with the next task while both run
 The `copilot-rescue` agent always runs Copilot CLI with a scoped flag set:
 
 ```
-copilot -p "<task>" -s \
-  --no-ask-user --max-ai-credits 10 \
+copilot -p "$(cat <<'COPILOT_TASK'
+<task>
+COPILOT_TASK
+)" -s --no-ask-user --max-ai-credits 30 \
   --allow-tool='shell(git:*)' --allow-tool=write \
   --deny-tool='shell(rm)' --deny-tool='shell(git push)' \
   --deny-tool='shell(git reset)' --deny-tool='shell(git clean)' \
-  --deny-tool='shell(git checkout)'
+  --deny-tool='shell(git checkout)' --deny-tool='shell(git restore)' \
+  --deny-tool='shell(git switch)' --deny-tool='shell(git rm)' \
+  --deny-tool='shell(git stash)' --deny-tool='shell(git worktree)' \
+  --deny-tool='shell(git submodule)' --deny-tool='shell(git config)'
 ```
 
-- `--no-ask-user` prevents stalls and `--max-ai-credits 10` caps default spend
-  (`--credits <N>` overrides it). Deny rules always win over allow rules — even
-  under `--allow-all`. The denies block destructive and shared-state commands a
-  mechanical task never needs (`rm`, `git push`, `git reset`, `git clean`,
-  `git checkout`) while keeping the run fully non-interactive.
+- The task is passed through a quoted heredoc (`<<'COPILOT_TASK'`), never
+  inline in double quotes: bash would otherwise run backticked commands in the
+  task text itself — outside every deny rule — and mangle `$` and quotes.
+- `--no-ask-user` prevents stalls and `--max-ai-credits 30` (the CLI minimum)
+  caps default spend (`--credits <N>` overrides it). Deny rules win over allow
+  rules for commands Copilot runs directly. The denies block destructive and
+  shared-state commands a mechanical task never needs (`rm`, and the git
+  subcommands `push`, `reset`, `clean`, `checkout`, `restore`, `switch`, `rm`,
+  `stash`, `worktree`, `submodule`, `config`) while keeping the run fully
+  non-interactive. Matching is per first-level subcommand, so git global
+  options (e.g. `git -c alias.x='!cmd' x`) and hooks Copilot writes can still
+  run code: this is a guardrail, not a sandbox — review `git status`, `git log`
+  and `git reflog` after every run.
+- `--effort <level>` is forwarded only together with a pinned `--model` other
+  than `auto`: Auto (implicit or `--model auto`) rejects reasoning-effort
+  configuration.
+- Only `git` may run by default; in `-p` mode any other shell command is denied
+  without a prompt — a task that must build, test or lint fails with a
+  permission denial unless the tool is allowed. Pass
+  `--allow-shell <tool>[,<tool>...]`, or ask for the command explicitly in the
+  task (e.g. "run `dotnet test`"): tools on the build-toolchain allowlist
+  (`dotnet`, `npm`, `ng`, `yarn`, `pnpm`, `pytest`, `mvn`, `gradle`, `go`,
+  `cargo`, `make`) are then allowed per tool with
+  `--allow-tool='shell(<tool>:*)'`. Interpreters and package runners (`node`,
+  `python`, `npx`, `pip`, …) need an explicit `--allow-shell`. Command shells,
+  command runners and privilege tools (`env`, `xargs`, `sudo`…), deletion
+  commands and network/remote/cloud CLIs (including `gh` and `ssh`) are refused
+  by name and by category, and `--allow-all` is never used.
+- Deny rules only match commands Copilot runs directly, not processes an
+  allowed tool spawns. Once any shell tool is allowed — via `--allow-shell` or
+  auto-allow, which triggers on task wording alone and does not check whether
+  the repo is trusted — Copilot can write a script, npm script, Makefile recipe
+  or MSBuild target and run it through that tool, and that code can delete
+  files, push or use the network without hitting a deny rule. Treat any shell
+  allowance as full code execution with your credentials, and review
+  `git status`, `git log` and `git reflog` after the run. Private package feeds
+  (e.g. Azure Artifacts NuGet) still need credentials in Copilot's environment
+  — a 401 on restore is auth, not permissions.
 - `--autopilot` is avoided for bounded tasks. When a task is genuinely
   open-ended, `--max-autopilot-continues <N>` is always pinned explicitly:
   Copilot CLI has a known infinite-loop bug on externally-blocked tasks

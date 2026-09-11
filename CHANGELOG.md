@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.3.1 — 2026-09-10
+
+- Fix build/test tasks failing with a silent permission denial: in `-p`
+  (non-interactive) mode every shell command not matched by an `--allow-tool`
+  pattern (i.e. everything but git) was denied without a prompt, and the
+  opt-in tool allowance was vague enough that callers never triggered it.
+- Add the `--allow-shell <tool>[,<tool>]` runtime flag, auto-allow build
+  toolchains (`dotnet`, `npm`, `ng`, `pytest`…) when the task explicitly asks
+  to run them (interpreters such as `node`/`python` need the explicit flag),
+  and refuse command shells, command runners and privilege tools, deletion
+  commands and network/remote/cloud CLIs (including `gh` and `ssh`) by name
+  and by category.
+- Remove the contradictory `--allow-all` fallback from the forwarder.
+- Fix every forwarded call failing on Copilot CLI 1.0.83: the default
+  `--max-ai-credits 10` is below the CLI's 30-credit minimum (default is now
+  30; lower `--credits` values are raised to 30), and `--effort` is rejected
+  by Auto (now forwarded only with a pinned `--model` other than `auto`; the
+  automatic `--effort low` for tasks marked mechanical is gone).
+- Pass the task through a quoted heredoc instead of double quotes: backticks
+  in the task (which this release encourages, e.g. "run `dotnet test`") were
+  executed by the forwarder's own shell, outside every deny rule, and `$` and
+  quotes were mangled. The Codex skill gets bash and PowerShell forms.
+- Also deny `git restore`, `git switch`, `git rm`, `git stash`,
+  `git worktree`, `git submodule` and `git config`, and stop claiming the flag
+  set "never" deletes files: deny rules only match direct commands, so any
+  shell allowance is now documented as full code execution, and callers are
+  told to review `git status`, `git log` and `git reflog` after every run
+  (git alone can run code through aliases or hooks).
+- The agent description now tells callers that only `git` runs unless
+  `--allow-shell` or an explicit command is given; the CLAUDE.md and
+  AGENTS.md snippets say the same.
+
 ## 0.3.0 — 2026-09-10
 
 - Align Copilot forwarding with CLI 1.0.83: disable interactive questions,
